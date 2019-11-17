@@ -19,8 +19,8 @@ def filter_instances(project):
 def instances():
     """Commands for Instances"""
 
-@instances.command("list")
-@click.option('--project', default=None, help="Only instances for project (tag Project:<name>)")
+@instances.command('list')
+@click.option('--project', default=None, help='Only instances for project (tag Project:<name>)')
 def list_instances(project):
     "List EC2 instances"
     instances = filter_instances(project)
@@ -49,6 +49,8 @@ def stop_instances(project):
         print("stopping {0}...".format(i.id))
         i.stop()
 
+    return
+
 @instances.command('start')
 @click.option('--project', default=None, help='Only instances for project')
 def start_instances(project):
@@ -59,6 +61,8 @@ def start_instances(project):
     for i in instances:
         print("starting {0}...".format(i.id))
         i.start()
+
+    return
 
 if __name__ == '__main__':
     instances()
