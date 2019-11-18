@@ -41,6 +41,9 @@ def list_snapshots(project):
                     s.progress,
                     s.start_time.strftime("%c")
                 )))
+
+                if s.state == 'completed': break
+
     return
 
 @cli.group('volumes')
@@ -137,11 +140,13 @@ def start_instances(project):
 
     instances = filter_instances(project)
 
-    try:
-        i.start()
-    except botocore.exceptions.ClientError as e:
-        print(" Could not start {0}. ".format(i.id) + str(e))
-        continue
+    for i in instances:
+        print("Starting {0}...".format(i.id))
+        try:
+            i.start()
+        except botocore.exceptions.ClientError as e:
+            print(" Could not start {0}. ".format(i.id) + str(e))
+            continue
 
     return
 
