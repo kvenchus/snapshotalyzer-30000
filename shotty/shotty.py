@@ -26,7 +26,8 @@ def snapshots():
 
 @snapshots.command('list')
 @click.option('--project', default=None, help='Only snapshots for project (tag Project:<name>)')
-def list_snapshots(project):
+@click.option('--all', 'list_all', default=False, is_flag=True, help="List all snapshots for each volume, not just the most recent")
+def list_snapshots(project, list_all):
     "List Snapshots"
     instances = filter_instances(project)
 
@@ -42,7 +43,7 @@ def list_snapshots(project):
                     s.start_time.strftime("%c")
                 )))
 
-                if s.state == 'completed': break
+                if s.state == 'completed' and not list_all: break
 
     return
 
@@ -141,7 +142,7 @@ def start_instances(project):
     instances = filter_instances(project)
 
     for i in instances:
-        print("Starting {0}...".format(i.id))
+        print(" {0}...".format(i.id))
         try:
             i.start()
         except botocore.exceptions.ClientError as e:
