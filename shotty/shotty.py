@@ -1,4 +1,5 @@
 import boto3
+import botocore
 import click
 
 session = boto3.Session(profile_name='shotty')
@@ -64,28 +65,34 @@ def list_volumes(project):
 
     return
 
-
-
-
 @cli.group('instances')
 def instances():
     """Commands for Instances"""
 
 @instances.command('snapshot', help="create snapshots of all volumes")
-click.option('--project', default=None, help='Only instances for project (tag Project:<name>)')
+@click.option('--project', default=None, help='Only instances for project (tag Project:<name>)')
 def create_snapshots(project):
     """Create Snapshots for EC2 Instances"""
 
     instances = filter_instances(project)
 
     for i in instances:
+        print("Stopping {0}...".format(i.id))
+
+        i.stop()
+        i.wait_until_stopped()
+
         for v in i.volumes.all():
             print("Creating snapshots of {0}".format(v.id))
             v.create_snapshot(Description="Created by SnapshotAlyzer 30000")
 
+        print("Starting {0}...".format(i.id))
+
+        i.start()
+        i.wait_until_running()
+
+    print("Job's Done!")
     return
-
-
 
 @instances.command('list')
 @click.option('--project', default=None, help='Only instances for project (tag Project:<name>)')
@@ -115,7 +122,11 @@ def stop_instances(project):
 
     for i in instances:
         print("stopping {0}...".format(i.id))
-        i.stop()
+        try:
+            i.stop()
+        except botocore.exceptions.ClientError as e:
+            print(" Could not stop {0}. ".format(i.id) + str(e))
+            continue
 
     return
 
@@ -126,9 +137,11 @@ def start_instances(project):
 
     instances = filter_instances(project)
 
-    for i in instances:
-        print("starting {0}...".format(i.id))
+    try:
         i.start()
+    except botocore.exceptions.ClientError as e:
+        print(" Could not start {0}. ".format(i.id) + str(e))
+        continue
 
     return
 
